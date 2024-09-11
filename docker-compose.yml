@@ -1,0 +1,42 @@
+version: "3.8"
+services:
+  mysql:
+    container_name: mysql_db_4.2
+    image: mysql:8.0.32
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345
+      - MYSQL_PASSWORD=12345
+      - MYSQL_USER=bn_moodle
+      - MYSQL_DATABASE=bitnami_moodle
+      - MYSQL_CHARACTER_SET=utf8mb4
+      - MYSQL_COLLATE=utf8mb4_unicode_ci
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 3
+
+  moodle3:
+    container_name: moodle3
+    image: docker.io/bitnami/moodle:4.2
+    restart: always
+    environment:
+      - MOODLE_DATABASE_TYPE=mysqli
+      - MOODLE_DATABASE_HOST=mysql
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=bn_moodle
+      - MOODLE_DATABASE_NAME=bitnami_moodle
+      - MOODLE_DATABASE_PASSWORD=12345
+    ports:
+      - 80:8080
+    volumes:
+      - ./moodle_data:/bitnami/moodle
+      # - shared:/bitnami/moodle/descargas/
+    depends_on:
+      mysql:
+        condition: service_healthy
